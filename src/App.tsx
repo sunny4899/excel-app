@@ -44,30 +44,34 @@ function App() {
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 md:px-8 flex justify-between items-center">
           <div className="flex items-center">
             <GithubIcon className="h-8 w-8 text-blue-600" />
-            <h1 className="ml-2 text-2xl font-bold text-gray-800">Excel Manager</h1>
+            <h1 className="ml-2 text-2xl font-bold text-gray-800">
+              Excel Manager
+            </h1>
           </div>
           <div className="text-sm text-gray-500">
             Upload • View • Edit • Download
           </div>
         </div>
       </header>
-      
+
       <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 md:px-8">
         <div className="grid grid-cols-1 gap-8">
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 className="text-lg font-semibold mb-4 text-gray-800">Upload Excel Files</h2>
+            <h2 className="text-lg font-semibold mb-4 text-gray-800">
+              Upload Excel Files
+            </h2>
             <FileUploader onFileUpload={handleFileUpload} />
           </div>
-          
+
           {files.length > 0 && (
-            <FileList 
-              files={files} 
-              activeFileId={activeFileId || ''} 
-              onSelectFile={handleFileSelect} 
-              onRemoveFile={handleFileRemove} 
+            <FileList
+              files={files}
+              activeFileId={activeFileId || ""}
+              onSelectFile={handleFileSelect}
+              onRemoveFile={handleFileRemove}
             />
           )}
-          
+
           {activeFile ? (
             <ExcelViewer file={activeFile} updateFile={updateFile} />
           ) : (
@@ -75,11 +79,27 @@ function App() {
           )}
         </div>
       </main>
-      
+
       <footer className="bg-white border-t mt-12">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 md:px-8">
           <p className="text-center text-gray-500 text-sm">
-            Excel File Manager - Safe and secure spreadsheet management in your browser
+            Excel File Manager © {new Date().getFullYear()}. Built with{" "}
+            <a
+              href="https://reactjs.org"
+              target="_blank"
+              className="text-blue-600 hover:underline"
+            >
+              React
+            </a>{" "}
+            and{" "}
+            <a
+              href="https://tailwindcss.com"
+              target="_blank"
+              className="text-blue-600 hover:underline"
+            >
+              Tailwind CSS
+            </a>
+            .
           </p>
         </div>
       </footer>
