@@ -8,18 +8,18 @@ import { TableProperties } from 'lucide-react';
 
 function App() {
   const [files, setFiles] = useState<ExcelFile[]>(() => {
-    const stored = localStorage.getItem('excel_app_state');
+    const stored = sessionStorage.getItem('excel_app_state');
     return stored ? JSON.parse(stored).files : [];
   });
 
   const [activeFileId, setActiveFileId] = useState<string | null>(() => {
-    const stored = localStorage.getItem('excel_app_state');
+    const stored = sessionStorage.getItem('excel_app_state');
     return stored ? JSON.parse(stored).activeFileId : null;
   });
 
   useEffect(() => {
     const state = { files, activeFileId };
-    localStorage.setItem('excel_app_state', JSON.stringify(state));
+    sessionStorage.setItem('excel_app_state', JSON.stringify(state));
   }, [files, activeFileId]);
 
   const handleFileUpload = (file: ExcelFile) => {
