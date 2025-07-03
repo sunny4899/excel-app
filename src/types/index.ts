@@ -1,18 +1,23 @@
 export interface ExcelFile {
   id: string;
   name: string;
-  data: Array<Array<any>>;
-  headers: Array<string>;
+  sheets: { [key: string]: { headers: string[], data: unknown[][] } };
+  currentWorksheet: string;
   modified: boolean;
 }
 
+export type SheetData = {
+  headers: string[];
+  data: unknown[][];
+};
+
 export interface TableCellProps {
-  value: any;
+  value: unknown;
   rowIndex: number;
   colIndex: number;
   isHeader: boolean;
   sortColumn: (colIndex: number) => void;
-  updateCell: (rowIndex: number, colIndex: number, value: any) => void;
+  updateCell: (rowIndex: number, colIndex: number, value: unknown) => void;
 }
 
 export interface ExcelViewerProps {

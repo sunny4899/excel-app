@@ -1,51 +1,84 @@
 import { useState } from 'react';
 import { ExcelFile, ExcelViewerProps } from '../types';
 import TableCell from './TableCell';
-import { sortTableData } from '../utils/excel';
+import { sortTableData, downloadExcelFile } from '../utils/excel';
 import { Search, Download, Info } from 'lucide-react';
-import { downloadExcelFile } from '../utils/excel';
 
 const ExcelViewer: React.FC<ExcelViewerProps> = ({ file, updateFile }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showInfo, setShowInfo] = useState(false);
-  
+
   if (!file) return null;
-  
+
+  // Use the current worksheet's data
+  const currentSheet = file.sheets[file.currentWorksheet];
+  const sheetData = currentSheet.data;
+
   const updateCell = (rowIndex: number, colIndex: number, value: any) => {
-    const newData = [...file.data];
+    const newData = [...sheetData];
     newData[rowIndex][colIndex] = value;
-    
+
     updateFile({
       ...file,
-      data: newData,
+      sheets: {
+        ...file.sheets,
+        [file.currentWorksheet]: {
+          ...currentSheet,
+          data: newData
+        }
+      },
       modified: true
     });
   };
-  
+
   const sortColumn = (colIndex: number) => {
-    const sortedData = sortTableData(file.data, colIndex);
-    
+    const sortedData = sortTableData(sheetData, colIndex);
+
     updateFile({
       ...file,
-      data: sortedData,
+      sheets: {
+        ...file.sheets,
+        [file.currentWorksheet]: {
+          ...currentSheet,
+          data: sortedData
+        }
+      },
       modified: true
     });
   };
-  
-  const filteredData = searchTerm 
-    ? file.data.filter((row, idx) => {
+
+  const handleWorksheetChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    updateFile({
+      ...file,
+      currentWorksheet: e.target.value
+    });
+  };
+
+  const filteredData = searchTerm
+    ? sheetData.filter((row, idx) => {
         if (idx === 0) return true; // Always include headers
-        return row.some(cell => 
-          String(cell).toLowerCase().includes(searchTerm.toLowerCase())
+        return row.some(cell =>
+          String(cell || '').toLowerCase().includes(searchTerm.toLowerCase())
         );
       })
-    : file.data;
-  
+    : sheetData;
+
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       <div className="flex items-center justify-between p-4 border-b">
-        <div className="flex items-center">
+        <div className="flex items-center gap-4">
           <h2 className="text-xl font-semibold text-gray-800 mr-2">{file.name}</h2>
+          <select
+            className="border rounded px-2 py-1 text-sm"
+            value={file.currentWorksheet}
+            onChange={handleWorksheetChange}
+          >
+            {Object.keys(file.sheets).map(sheetName => (
+              <option key={sheetName} value={sheetName}>
+                {sheetName}
+              </option>
+            ))}
+          </select>
           {file.modified && (
             <span className="px-2 py-1 text-xs font-medium rounded-full bg-amber-100 text-amber-800">
               Modified
@@ -79,15 +112,16 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({ file, updateFile }) => {
           </button>
         </div>
       </div>
-      
+
       {showInfo && (
         <div className="bg-blue-50 p-4 text-sm text-blue-800 border-b border-blue-200">
           <p><strong>Double-click</strong> any cell to edit its content.</p>
           <p><strong>Click column headers</strong> to sort the table in ascending order.</p>
           <p>All changes are saved automatically and can be downloaded using the Download button.</p>
+          <p><strong>Select worksheet</strong> from the dropdown to view/edit other sheets.</p>
         </div>
       )}
-      
+
       <div className="overflow-x-auto max-h-[70vh]">
         <table className="min-w-full table-auto">
           <tbody>
@@ -109,9 +143,9 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({ file, updateFile }) => {
           </tbody>
         </table>
       </div>
-      
+
       <div className="p-3 bg-gray-50 text-sm text-gray-500 border-t">
-        {filteredData.length - 1} rows {searchTerm && `(filtered from ${file.data.length - 1})`}
+        {filteredData.length - 1} rows {searchTerm && `(filtered from ${sheetData.length - 1})`}
       </div>
     </div>
   );

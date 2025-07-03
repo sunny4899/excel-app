@@ -53,7 +53,7 @@ const FileList: React.FC<FileListProps> = ({
                 {file.name}
               </p>
               <p className="text-xs text-gray-500">
-                {file.data.length - 1} rows
+                {file.sheets[file.currentWorksheet].data.length - 1} rows
                 {file.modified && (
                   <span className="ml-2 text-amber-600 font-medium">Modified</span>
                 )}
