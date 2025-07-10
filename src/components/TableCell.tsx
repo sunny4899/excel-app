@@ -79,12 +79,12 @@ const TableCell: React.FC<TableCellProps> = ({
   if (isHeader) {
     return (
       <th 
-        className="px-4 py-3 bg-gray-100 font-semibold text-sm text-left text-gray-700 border-b sticky top-0 cursor-pointer hover:bg-gray-200 transition-colors"
+        className="px-4 py-3 bg-gray-100 dark:bg-gray-700 font-semibold text-sm text-left text-gray-700 dark:text-gray-200 border-b dark:border-gray-600 sticky top-0 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
         onClick={() => sortColumn(colIndex)}
       >
         <div className="flex items-center justify-between">
-          <span>{value || ''}</span>
-          <ArrowUpDown className="h-4 w-4 ml-1 text-gray-500" />
+          <span>{value?.toString() ?? ''}</span>
+          <ArrowUpDown className="h-4 w-4 ml-1 text-gray-500 dark:text-gray-400" />
         </div>
       </th>
     );
@@ -92,11 +92,11 @@ const TableCell: React.FC<TableCellProps> = ({
   
   if (isEditing) {
     return (
-      <td className="px-2 py-2 border border-blue-300 bg-blue-50">
+      <td className="px-2 py-2 border border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-gray-800">
         <input
           ref={inputRef}
           type="text"
-          className="w-full px-2 py-1 border-0 focus:ring-2 focus:ring-blue-500 outline-none bg-white rounded"
+          className="w-full px-2 py-1 border-0 focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-gray-700 dark:text-gray-200 rounded"
           value={cellValue}
           onChange={(e) => setCellValue(e.target.value)}
           onBlur={handleBlur}
@@ -108,8 +108,8 @@ const TableCell: React.FC<TableCellProps> = ({
   }
   
   return (
-    <td 
-      className="px-4 py-3 border-b text-sm text-gray-800 hover:bg-gray-50 transition-colors"
+      <td 
+      className="px-4 py-3 border-b dark:border-gray-600 text-sm text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
       onDoubleClick={handleDoubleClick}
     >
       {value?.toString() ?? ''}

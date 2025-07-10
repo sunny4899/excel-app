@@ -11,11 +11,13 @@
     "update-browsers": "npx update-browserslist-db@latest"
   },
   "dependencies": {
+    "@types/react-router-dom": "^5.3.3",
     "clsx": "^2.1.0",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-dropzone": "^14.2.3",
+    "react-router-dom": "^7.6.3",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
