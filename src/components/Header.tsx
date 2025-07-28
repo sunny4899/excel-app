@@ -53,7 +53,6 @@ export default function Header({ darkMode, setDarkMode }: {
             </div>
           </button>
           <div className="text-sm text-gray-500 dark:text-gray-300">
-            Upload • View • Edit • Download •
             <Link
               to="/merge"
               className="text-blue-600 hover:text-blue-800 ml-1"

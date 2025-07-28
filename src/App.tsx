@@ -125,9 +125,13 @@ function App() {
       <Route
         path="/merge"
         element={
-          <React.Suspense fallback={<div>Loading...</div>}>
-            <MergeWizard files={files} onMerge={handleMergeSelection} />
-          </React.Suspense>
+          <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+            <Header darkMode={darkMode} setDarkMode={setDarkMode} />
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <MergeWizard files={files} onMerge={handleMergeSelection} />
+            </React.Suspense>
+            <Footer />
+          </div>
         }
       />
       <Route
