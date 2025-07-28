@@ -1,12 +1,13 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { Routes, Route } from 'react-router-dom';
 import FileUploader from "./components/FileUploader";
 import FileList from "./components/FileList";
 import ExcelViewer from "./components/ExcelViewer";
 import NoFilesPlaceholder from "./components/NoFilesPlaceholder";
 import { ExcelFile } from "./types";
-import { TableProperties } from "lucide-react";
-import { Routes, Route, Link } from 'react-router-dom';
-import MergeWizard from "./components/MergeWizard";
+import Header from "./components/Header.tsx";
+import Footer from "./components/Footer.tsx";
+const MergeWizard = React.lazy(() => import("./components/MergeWizard"));
 
 function App() {
   const [files, setFiles] = useState<ExcelFile[]>(() => {
@@ -103,111 +104,69 @@ function App() {
 
   const activeFile = files.find((file) => file.id === activeFileId);
 
-  const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem('darkMode');
-    return saved ? JSON.parse(saved) : false;
-  });
+  // Dark mode hook
+  const useDarkMode = () => {
+    const [darkMode, setDarkMode] = useState(() => {
+      const saved = localStorage.getItem('darkMode');
+      return saved ? JSON.parse(saved) : false;
+    });
 
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    localStorage.setItem('darkMode', JSON.stringify(darkMode));
-  }, [darkMode]);
+    useEffect(() => {
+      document.documentElement.classList.toggle('dark', darkMode);
+      localStorage.setItem('darkMode', JSON.stringify(darkMode));
+    }, [darkMode]);
 
+    return [darkMode, setDarkMode] as const;
+  };
+
+  const [darkMode, setDarkMode] = useDarkMode();
   return (
     <Routes>
-      <Route path="/merge" element={
-        <MergeWizard 
-          files={files}
-          onMerge={handleMergeSelection}
-        />
-      }/>
-
-      <Route path="/" element={
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-          <header className="bg-white dark:bg-gray-800 shadow-sm">
-            <div className="max-w-9/10 mx-auto px-4 py-4 sm:px-6 md:px-8 flex justify-between items-center">
-              <div className="flex items-center">
-                <TableProperties className="h-8 w-8 text-blue-600" />
-                <h1 className="ml-2 text-2xl font-bold text-gray-800 dark:text-gray-100">
-                  Table Manager
-                </h1>
-              </div>
-              <div className="flex items-center gap-4">
-                <button 
-                  onClick={() => setDarkMode(!darkMode)}
-                  className="px-3 py-1 rounded-md bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-sm font-medium transition-colors"
-                >
-                  {darkMode ? 'Light Mode' : 'Dark Mode'}
-                </button>
-                <div className="text-sm text-gray-500 dark:text-gray-300">
-                  Upload • View • Edit • Download • 
-                  <Link to="/merge" className="text-blue-600 hover:text-blue-800 ml-1">
-                    Merge Files
-                  </Link>
+      <Route
+        path="/merge"
+        element={
+          <React.Suspense fallback={<div>Loading...</div>}>
+            <MergeWizard files={files} onMerge={handleMergeSelection} />
+          </React.Suspense>
+        }
+      />
+      <Route
+        path="/"
+        element={
+          <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+            <Header darkMode={darkMode} setDarkMode={setDarkMode} />
+            <main className="w-full max-w-9/10 mx-auto px-4 py-8 sm:px-6 md:px-8 dark:text-gray-100 flex-grow">
+              <div className="grid grid-cols-1 gap-8">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                  <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100">
+                    Upload Excel Files
+                  </h2>
+                  <FileUploader onFileUpload={handleFileUpload} />
                 </div>
+
+                {files.length > 0 && (
+                  <FileList
+                    files={files}
+                    activeFileId={activeFileId || ""}
+                    selectedFiles={selectedFiles}
+                    onSelectFile={handleFileSelect}
+                    onRemoveFile={handleFileRemove}
+                    onSelectMerge={handleMergeSelection}
+                  />
+                )}
+
+                {activeFile ? (
+                  <ExcelViewer file={activeFile} updateFile={updateFile} />
+                ) : (
+                  <NoFilesPlaceholder />
+                )}
               </div>
-            </div>
-          </header>
+            </main>
 
-          <main className="w-full max-w-9/10 mx-auto px-4 py-8 sm:px-6 md:px-8 dark:text-gray-100">
-            <div className="grid grid-cols-1 gap-8">
-              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-                <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100">
-                  Upload Excel Files
-                </h2>
-                <FileUploader onFileUpload={handleFileUpload} />
-              </div>
-
-              {files.length > 0 && (
-                <FileList
-                  files={files}
-                  activeFileId={activeFileId || ""}
-                  selectedFiles={selectedFiles}
-                  onSelectFile={handleFileSelect}
-                  onRemoveFile={handleFileRemove}
-                  onSelectMerge={handleMergeSelection}
-                />
-              )}
-
-              {activeFile ? (
-                <ExcelViewer file={activeFile} updateFile={updateFile} />
-              ) : (
-                <NoFilesPlaceholder />
-              )}
-            </div>
-          </main>
-
-          <footer className="bg-white dark:bg-gray-800 border-t mt-12 dark:border-gray-700">
-            <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 md:px-8">
-              <p className="text-center text-gray-500 dark:text-gray-300 text-sm">
-                Excel File Manager © {new Date().getFullYear()}. Built with{" "}
-                <a
-                  href="https://reactjs.org"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline"
-                >
-                  React
-                </a>{" "}
-                and{" "}
-                <a
-                  href="https://tailwindcss.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline"
-                >
-                  Tailwind CSS
-                </a>
-                .
-              </p>
-            </div>
-          </footer>
-        </div>
-      }/>
+            <Footer />
+          </div>
+        }
+      />
     </Routes>
   );
 }
