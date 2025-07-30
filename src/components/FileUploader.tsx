@@ -44,10 +44,12 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onFileUpload }) => {
     <div
       {...getRootProps()}
       className={`
-        border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors duration-200
+        border-2 border-dashed rounded-lg p-8 text-center cursor-pointer 
+        transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+        dark:border-gray-600 dark:hover:border-blue-500 dark:focus:ring-blue-500 dark:focus:border-blue-500
         ${isDragActive 
-          ? 'border-blue-500 bg-blue-50' 
-          : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50'
+          ? 'border-blue-500 bg-blue-50 dark:bg-gray-700' 
+          : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-gray-600'
         }
       `}
     >

@@ -30,7 +30,10 @@ const MergeWizard: React.FC<MergeWizardProps> = ({ files, onMerge }) => {
   return (
     <div className="max-w-full mx-12 px-12 py-8 dark:bg-gray-900 min-h-screen">
       <div className="mb-6 flex items-center justify-between">
-        <Link to="/" className="flex items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+        <Link
+          to="/"
+          className="flex items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+        >
           <ChevronLeft className="h-5 w-5" />
           Back to Files
         </Link>
@@ -48,8 +51,9 @@ const MergeWizard: React.FC<MergeWizardProps> = ({ files, onMerge }) => {
             type="text"
             value={fileName}
             onChange={(e) => setFileName(e.target.value)}
-            className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+            className="w-full p-2 border border-gray-300 rounded-md transition-all duration-200 focus:ring-0 focus:outline-none focus:border-black focus:bg-blue-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:border-white"
             placeholder="Enter merged file name"
+            autoFocus
           />
         </div>
 
@@ -59,13 +63,13 @@ const MergeWizard: React.FC<MergeWizardProps> = ({ files, onMerge }) => {
               key={file.id}
               className={`p-4 border rounded-lg cursor-pointer transition-colors ${
                 selectedFiles.includes(file.id)
-                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/50 dark:border-blue-700'
-                  : 'border-gray-200 hover:border-blue-300 dark:border-gray-600 dark:hover:border-blue-500'
+                  ? "border-blue-500 bg-blue-50 dark:bg-blue-900/50 dark:border-blue-700"
+                  : "border-gray-200 hover:border-blue-300 dark:border-gray-600 dark:hover:border-blue-500"
               }`}
               onClick={() => {
-                setSelectedFiles(prev =>
+                setSelectedFiles((prev) =>
                   prev.includes(file.id)
-                    ? prev.filter(id => id !== file.id)
+                    ? prev.filter((id) => id !== file.id)
                     : [...prev, file.id]
                 );
               }}
@@ -74,11 +78,13 @@ const MergeWizard: React.FC<MergeWizardProps> = ({ files, onMerge }) => {
                 <div>
                   <h3 className="font-medium dark:text-white">{file.name}</h3>
                   <p className="text-sm text-gray-500 dark:text-gray-300">
-                    {file.sheets[file.currentWorksheet].headers.length} columns,{' '}
+                    {file.sheets[file.currentWorksheet].headers.length} columns,{" "}
                     {file.sheets[file.currentWorksheet].data.length} rows
                   </p>
                 </div>
-                {selectedFiles.includes(file.id) && <Check className="h-5 w-5 text-blue-500 dark:text-blue-400" />}
+                {selectedFiles.includes(file.id) && (
+                  <Check className="h-5 w-5 text-blue-500 dark:text-blue-400" />
+                )}
               </div>
             </div>
           ))}
@@ -89,8 +95,8 @@ const MergeWizard: React.FC<MergeWizardProps> = ({ files, onMerge }) => {
           disabled={selectedFiles.length < 2}
           className={`mt-6 px-6 py-3 text-white rounded-lg font-medium transition-all ${
             selectedFiles.length >= 2
-              ? 'bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800'
-              : 'bg-gray-300 cursor-not-allowed dark:bg-gray-600 dark:text-gray-300'
+              ? "bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800"
+              : "bg-gray-300 cursor-not-allowed dark:bg-gray-600 dark:text-gray-300"
           }`}
         >
           Merge {selectedFiles.length} Files

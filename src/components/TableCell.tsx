@@ -92,16 +92,21 @@ const TableCell: React.FC<TableCellProps> = ({
   
   if (isEditing) {
     return (
-      <td className="px-2 py-2 border border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-gray-800">
+      <td className="px-4 py-2 border border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-gray-800">
         <input
           ref={inputRef}
           type="text"
-          className="w-full px-2 py-1 border-0 focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-gray-700 dark:text-gray-200 rounded"
+          className="w-full  border-0  focus:outline-none bg-white dark:bg-gray-700 dark:text-gray-200 rounded"
           value={cellValue}
           onChange={(e) => setCellValue(e.target.value)}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
-          placeholder={typeof value === 'string' && value.match(/^[A-Za-z]{3} \d{1,2}, \d{4}$/) ? 'YYYY-MM-DD' : ''}
+          placeholder={
+            typeof value === "string" &&
+            value.match(/^[A-Za-z]{3} \d{1,2}, \d{4}$/)
+              ? "YYYY-MM-DD"
+              : ""
+          }
         />
       </td>
     );

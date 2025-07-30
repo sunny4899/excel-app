@@ -143,7 +143,7 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({ file, updateFile }) => {
 
       <div className="flex-1 overflow-auto min-h-0">
         <div className="h-full overflow-x-auto overflow-y-auto">
-          <table className="w-full h-full table-auto border-collapse">
+          <table className="w-full h-full table-fixed border-collapse">
             <tbody>
               {filteredData.map((row, rowIndex) => (
                 <tr
