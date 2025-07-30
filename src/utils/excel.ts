@@ -1,7 +1,12 @@
 import { read, utils, write } from 'xlsx';
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: unknown) => jsPDF;
+  }
+}
 import { ExcelFile } from '../types';
 
-const isExcelDate = (value: any): boolean => {
+const isExcelDate = (value: unknown): boolean => {
   // Excel dates are stored as numbers representing days since 1900-01-01
   return typeof value === 'number' && !Number.isInteger(value) && value > 0;
 };
@@ -29,7 +34,7 @@ export const parseExcelFile = async (file: File): Promise<ExcelFile> => {
         const data = new Uint8Array(event.target.result as ArrayBuffer);
         const workbook = read(data, { type: 'array', cellDates: false });
 
-        const sheets: { [key: string]: { headers: string[], data: unknown[][] } } = {};
+        const sheets: { [key: string]: { headers: string[], data: (string | number | Date | null)[][] } } = {};
         workbook.SheetNames.forEach(sheetName => {
           const worksheet = workbook.Sheets[sheetName];
           const sheetData = utils.sheet_to_json(worksheet, {
@@ -51,11 +56,11 @@ export const parseExcelFile = async (file: File): Promise<ExcelFile> => {
               normalizedRow.push(null);
             }
             if (row !== sheetData[0]) {
-              normalizedRow.forEach((value, index) => {
-                if (isExcelDate(value)) {
-                  normalizedRow[index] = formatExcelDate(value as number);
-                }
-              });
+          normalizedRow.forEach((value, index) => {
+            if (typeof value === 'number' && isExcelDate(value)) {
+              normalizedRow[index] = formatExcelDate(value);
+            }
+          });
             }
             return normalizedRow;
           });
@@ -87,11 +92,11 @@ export const parseExcelFile = async (file: File): Promise<ExcelFile> => {
   });
 };
 
-export const downloadExcelFile = (file: ExcelFile) => {
+export const exportFile = async (file: ExcelFile, format: 'xlsx' | 'csv' | 'json' | 'pdf' = 'xlsx') => {
   const workbook = utils.book_new();
 
   Object.entries(file.sheets).forEach(([sheetName, sheet]) => {
-    const processedData = (sheet.data as any[][]).map((row, rowIndex) => {
+    const processedData = (sheet.data as (string | number | Date | null)[][]).map((row, rowIndex) => {
       if (rowIndex === 0) return row; // Skip header row
       return row.map((cell) => {
         if (typeof cell === 'string' && cell.match(/^[A-Za-z]{3} \d{1,2}, \d{4}$/)) {
@@ -108,25 +113,83 @@ export const downloadExcelFile = (file: ExcelFile) => {
   });
 
   // Generate file and trigger download
-  const excelBuffer = write(workbook, { bookType: 'xlsx', type: 'array' });
-  const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  let blob: Blob;
+  let extension: string;
+  let mimeType: string;
+  
+  if (format === 'pdf') {
+    const { default: jsPDF } = await import('jspdf');
+    const autoTable = await import('jspdf-autotable');
+    const doc = new jsPDF();
+    
+    Object.entries(file.sheets).forEach(([sheetName, sheet], index) => {
+      if (index > 0) doc.addPage();
+      
+      // Add sheet title
+      doc.setFontSize(16);
+      doc.text(sheetName, 14, 16);
+      
+      // Convert data to strings and handle null values
+      const bodyData = sheet.data.slice(1).map(row => 
+        row.map(cell => {
+          if (cell === null || cell === undefined) return '';
+          if (cell instanceof Date) return cell.toLocaleDateString();
+          return String(cell);
+        })
+      );
 
+      autoTable.default(doc, {
+        head: [sheet.headers],
+        body: bodyData,
+        startY: 22,
+        theme: 'grid',
+        styles: { fontSize: 10, cellPadding: 2 },
+        headStyles: { fillColor: [41, 128, 185] }
+      });
+    });
+
+    blob = doc.output('blob');
+    extension = 'pdf';
+    mimeType = 'application/pdf';
+  } else {
+    let data: string | ArrayBuffer;
+    if (format === 'csv') {
+      data = utils.sheet_to_csv(workbook.Sheets[file.currentWorksheet]);
+    } else if (format === 'json') {
+      data = JSON.stringify(utils.sheet_to_json(workbook.Sheets[file.currentWorksheet]), null, 2);
+    } else {
+      data = write(workbook, { bookType: format, type: 'array' });
+    }
+
+    mimeType = {
+      xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      csv: 'text/csv',
+      json: 'application/json'
+    }[format];
+
+    blob = new Blob([data], { type: mimeType });
+    extension = format;
+  }
+
+  const filename = `${file.modified ? 'modified_' : ''}${file.name.replace(/\.[^/.]+$/, '')}.${extension}`;
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = file.modified ? `modified_${file.name}` : file.name;
+  a.download = filename;
   a.click();
-
   URL.revokeObjectURL(url);
 };
 
-export const sortTableData = (data: Array<any[]>, colIndex: number): Array<any[]> => {
+export const sortTableData = (
+  data: Array<(string | number | Date | null)[]>, 
+  colIndex: number
+): Array<(string | number | Date | null)[]> => {
   if (data.length <= 1) return data;
 
   const headers = data[0] as unknown[];
   const rows = data.slice(1);
 
-  const sortedRows = [...rows].sort((a: any[], b: any[]) => {
+  const sortedRows = [...rows].sort((a: (string | number | Date | null)[], b: (string | number | Date | null)[]) => {
     const valueA = a[colIndex];
     const valueB = b[colIndex];
 

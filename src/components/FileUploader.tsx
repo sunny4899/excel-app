@@ -47,9 +47,10 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onFileUpload }) => {
         border-2 border-dashed rounded-lg p-8 text-center cursor-pointer 
         transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
         dark:border-gray-600 dark:hover:border-blue-500 dark:focus:ring-blue-500 dark:focus:border-blue-500
-        ${isDragActive 
-          ? 'border-blue-500 bg-blue-50 dark:bg-gray-700' 
-          : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-gray-600'
+        ${
+          isDragActive
+            ? "border-blue-500 bg-blue-50 dark:bg-gray-700"
+            : "border-gray-300 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-gray-600"
         }
       `}
     >
@@ -58,11 +59,17 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onFileUpload }) => {
         <FileUp className="h-12 w-12 text-blue-500" />
         <div>
           {isDragActive ? (
-            <p className="text-blue-500 font-medium">Drop Excel files here...</p>
+            <p className="text-blue-500 font-medium">
+              Drop Excel files here...
+            </p>
           ) : (
             <>
-              <p className="text-gray-700 font-medium mb-1">Drag & drop Excel files here</p>
-              <p className="text-gray-500 text-sm">or click to browse files</p>
+              <p className="text-gray-700 dark:text-gray-200 font-medium mb-1">
+                Drag & drop Excel files here
+              </p>
+              <p className="text-gray-500 dark:text-gray-300 text-sm">
+                or click to browse files
+              </p>
             </>
           )}
         </div>

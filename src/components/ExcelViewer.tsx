@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ExcelViewerProps } from "../types";
 import TableCell from "./TableCell";
-import { sortTableData, downloadExcelFile } from "../utils/excel";
+import { sortTableData, exportFile } from "../utils/excel";
 import { Search, Download, Info } from "lucide-react";
 
 const ExcelViewer: React.FC<ExcelViewerProps> = ({ file, updateFile }) => {
@@ -111,13 +111,28 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({ file, updateFile }) => {
           >
             <Info className="h-5 w-5" />
           </button>
-          <button
-            className="flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-lg transition-colors"
-            onClick={() => downloadExcelFile(file)}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Download
-          </button>
+          <div className="flex gap-2">
+            <select 
+              id="exportFormat"
+              className="bg-gray-100 border rounded px-2 py-1 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+              defaultValue="xlsx"
+            >
+              <option value="xlsx">XLSX</option>
+              <option value="csv">CSV</option>
+              <option value="json">JSON</option>
+              <option value="pdf">PDF</option>
+            </select>
+            <button
+              className="flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-lg transition-colors"
+              onClick={() => {
+                const format = document.getElementById('exportFormat') as HTMLSelectElement;
+                exportFile(file, format.value as 'xlsx' | 'csv' | 'json' | 'pdf');
+              }}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </button>
+          </div>
         </div>
       </div>
 

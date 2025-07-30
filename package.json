@@ -11,8 +11,11 @@
     "update-browsers": "npx update-browserslist-db@latest"
   },
   "dependencies": {
+    "@types/jspdf": "^1.3.3",
     "@types/react-router-dom": "^5.3.3",
     "clsx": "^2.1.0",
+    "jspdf": "^3.0.1",
+    "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

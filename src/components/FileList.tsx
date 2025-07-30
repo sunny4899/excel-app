@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FileListProps } from '../types';
 import { FileText, X, Download } from 'lucide-react';
-import { downloadExcelFile } from '../utils/excel';
+import { exportFile } from '../utils/excel';
 
 const FileList: React.FC<FileListProps> = ({ 
   files, 
@@ -21,7 +21,7 @@ const FileList: React.FC<FileListProps> = ({
     e.stopPropagation();
     const file = files.find(f => f.id === fileId);
     if (file) {
-      downloadExcelFile(file);
+      exportFile(file, 'xlsx');
     }
   };
 
