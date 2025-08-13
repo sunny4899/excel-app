@@ -112,7 +112,7 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({ file, updateFile }) => {
             <Info className="h-5 w-5" />
           </button>
           <div className="flex gap-2">
-            <select 
+            <select
               id="exportFormat"
               className="bg-gray-100 border rounded px-2 py-1 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
               defaultValue="xlsx"
@@ -125,8 +125,13 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({ file, updateFile }) => {
             <button
               className="flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-lg transition-colors"
               onClick={() => {
-                const format = document.getElementById('exportFormat') as HTMLSelectElement;
-                exportFile(file, format.value as 'xlsx' | 'csv' | 'json' | 'pdf');
+                const format = document.getElementById(
+                  "exportFormat"
+                ) as HTMLSelectElement;
+                exportFile(
+                  file,
+                  format.value as "xlsx" | "csv" | "json" | "pdf"
+                );
               }}
             >
               <Download className="h-4 w-4 mr-2" />
@@ -164,7 +169,9 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({ file, updateFile }) => {
                 <tr
                   key={rowIndex}
                   className={
-                    rowIndex === 0 ? "bg-gray-100 dark:bg-gray-700 sticky top-0 z-10" : "dark:bg-gray-800"
+                    rowIndex === 0
+                      ? "bg-gray-100 dark:bg-gray-700 sticky top-0 z-10"
+                      : "dark:bg-gray-800"
                   }
                 >
                   {row.map((cell, colIndex) => (
@@ -185,9 +192,52 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({ file, updateFile }) => {
         </div>
       </div>
 
-      <div className="p-3 bg-gray-50 dark:bg-gray-700 text-sm text-gray-500 dark:text-gray-400 border-t dark:border-gray-600 flex-shrink-0">
-        {filteredData.length - 1} rows{" "}
-        {searchTerm && `(filtered from ${sheetData.length - 1})`}
+      <div className="p-3 bg-gray-50 dark:bg-gray-700 text-sm text-gray-500 dark:text-gray-400 border-t dark:border-gray-600 flex items-center justify-between flex-shrink-0">
+        <span>
+          {filteredData.length - 1} rows{" "}
+          {searchTerm && `(filtered from ${sheetData.length - 1})`}
+        </span>
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              const newData = sheetData.map((r) => [...r, ""]);
+              updateFile({
+                ...file,
+                sheets: {
+                  ...file.sheets,
+                  [file.currentWorksheet]: {
+                    ...currentSheet,
+                    data: newData,
+                  },
+                },
+                modified: true,
+              });
+            }}
+            className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            + Column
+          </button>
+          <button
+            onClick={() => {
+              const newRow = Array(sheetData[0].length).fill("");
+              const newData = [...sheetData, newRow];
+              updateFile({
+                ...file,
+                sheets: {
+                  ...file.sheets,
+                  [file.currentWorksheet]: {
+                    ...currentSheet,
+                    data: newData,
+                  },
+                },
+                modified: true,
+              });
+            }}
+            className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+          >
+            + Row
+          </button>
+        </div>
       </div>
     </div>
   );
