@@ -11,6 +11,7 @@ const NoFilesPlaceholder = React.lazy(
   () => import("./components/NoFilesPlaceholder")
 );
 const MergeWizard = React.lazy(() => import("./components/MergeWizard"));
+const TableCreator = React.lazy(() => import("./components/TableCreator"));
 
 function useDarkMode() {
   const [darkMode, setDarkMode] = useState(() => {
@@ -28,33 +29,30 @@ function useDarkMode() {
 
 function App() {
   const [files, setFiles] = useState<ExcelFile[]>(() => {
-    const stored = sessionStorage.getItem("excel_app_state");
+    const stored = localStorage.getItem("excel_app_state");
     return stored ? JSON.parse(stored).files : [];
   });
 
   const [activeFileId, setActiveFileId] = useState<string | null>(() => {
-    const stored = sessionStorage.getItem("excel_app_state");
+    const stored = localStorage.getItem("excel_app_state");
     return stored ? JSON.parse(stored).activeFileId : null;
   });
 
-  const [selectedFiles, setSelectedFiles] = useState<string[]>(() => {
-    const stored = sessionStorage.getItem("excel_app_state");
-    return stored ? JSON.parse(stored).selectedFiles : [];
-  });
+  const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
 
   const [isCreating, setIsCreating] = useState(false);
-  const [newTableHeaders, setNewTableHeaders] = useState<string[]>([
-    "Column 1",
-  ]);
-  const [newTableData, setNewTableData] = useState<string[][]>([[""]]);
-  const [newTableName, setNewTableName] = useState<string>("");
 
   const [darkMode, setDarkMode] = useDarkMode();
 
   useEffect(() => {
-    const state = { files, activeFileId, selectedFiles };
-    sessionStorage.setItem("excel_app_state", JSON.stringify(state));
-  }, [files, activeFileId, selectedFiles]);
+    const state = {
+      files,
+      activeFileId,
+      selectedFiles,
+      isCreating
+    };
+    localStorage.setItem("excel_app_state", JSON.stringify(state));
+  }, [files, activeFileId, isCreating, selectedFiles]);
 
   const handleFileUpload = (file: ExcelFile) => {
     setFiles((prev) => [...prev, file]);
@@ -74,55 +72,54 @@ function App() {
     }
   };
 
-const handleMergeSelection = (fileIds: string[], fileName: string) => {
-  const allFiles = files.filter((f) => fileIds.includes(f.id));
-  const firstHeaders =
-    allFiles[0]?.sheets[allFiles[0].currentWorksheet].headers;
+  const handleMergeSelection = (fileIds: string[], fileName: string) => {
+    const allFiles = files.filter((f) => fileIds.includes(f.id));
+    const firstHeaders =
+      allFiles[0]?.sheets[allFiles[0].currentWorksheet].headers;
 
-  const allMatch = allFiles.every(
-    (file) =>
-      JSON.stringify(file.sheets[file.currentWorksheet].headers) ===
-      JSON.stringify(firstHeaders)
-  );
-
-  if (!allMatch) {
-    alert(
-      "Selected files have mismatched headers. Please select files with identical column structures."
+    const allMatch = allFiles.every(
+      (file) =>
+        JSON.stringify(file.sheets[file.currentWorksheet].headers) ===
+        JSON.stringify(firstHeaders)
     );
-    setSelectedFiles([]);
-    return;
-  }
 
-  if (fileIds.length < 2) return;
+    if (!allMatch) {
+      alert(
+        "Selected files have mismatched headers. Please select files with identical column structures."
+      );
+      setSelectedFiles([]);
+      return;
+    }
 
-  const mergedRows = [
-    firstHeaders, // include headers as first row
-    ...allFiles.flatMap(
-      (file) => file.sheets[file.currentWorksheet].data.slice(1) // skip headers from each file
-    ),
-  ];
+    if (fileIds.length < 2) return;
 
-  const mergedFile: ExcelFile = {
-    id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // unique ID
-    name: fileName,
-    sheets: {
-      "Sheet 1": {
-        headers: firstHeaders,
-        data: mergedRows,
+    const mergedRows = [
+      firstHeaders, // include headers as first row
+      ...allFiles.flatMap(
+        (file) => file.sheets[file.currentWorksheet].data.slice(1) // skip headers from each file
+      ),
+    ];
+
+    const mergedFile: ExcelFile = {
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // unique ID
+      name: fileName,
+      sheets: {
+        "Sheet 1": {
+          headers: firstHeaders,
+          data: mergedRows,
+        },
       },
-    },
-    currentWorksheet: "Sheet 1",
-    modified: false,
+      currentWorksheet: "Sheet 1",
+      modified: false,
+    };
+
+    setFiles((prev) => [
+      ...prev.filter((f) => f.id !== mergedFile.id),
+      mergedFile,
+    ]);
+    setActiveFileId(mergedFile.id);
+    setSelectedFiles([]);
   };
-
-  setFiles((prev) => [
-    ...prev.filter((f) => f.id !== mergedFile.id),
-    mergedFile,
-  ]);
-  setActiveFileId(mergedFile.id);
-  setSelectedFiles([]);
-};
-
 
   const updateFile = (updatedFile: ExcelFile) => {
     setFiles((prevFiles) =>
@@ -148,9 +145,9 @@ const handleMergeSelection = (fileIds: string[], fileName: string) => {
         element={
           <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
             <Header darkMode={darkMode} setDarkMode={setDarkMode} />
-            <SuspenseWrapper>
-              <MergeWizard files={files} onMerge={handleMergeSelection} />
-            </SuspenseWrapper>
+                  <SuspenseWrapper>
+                    <MergeWizard files={files} onMerge={handleMergeSelection} />
+                  </SuspenseWrapper>
             <Footer />
           </div>
         }
@@ -175,149 +172,23 @@ const handleMergeSelection = (fileIds: string[], fileName: string) => {
                     onClick={() => setIsCreating(true)}
                     className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                   >
-                    + Create New Table
+                    Create New Table
                   </button>
                 </div>
 
                 {/* Table Creation */}
                 {isCreating && (
-                  <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
-                    <div className="flex justify-between items-center mb-4">
-                      <div className="flex flex-col gap-1">
-                        <label
-                          htmlFor="new-table-name"
-                          className="text-sm font-medium"
-                        >
-                          Table Name
-                        </label>
-                        <input
-                          id="new-table-name"
-                          type="text"
-                          value={newTableName}
-                          onChange={(e) => setNewTableName(e.target.value)}
-                          placeholder="Enter table name"
-                          className="border rounded px-2 py-1 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                          autoFocus
-                        />
-                      </div>
-                      <button
-                        onClick={() => {
-                          setIsCreating(false);
-                          setNewTableHeaders(["Column 1"]);
-                          setNewTableData([[""]]);
-                          setNewTableName("");
-                        }}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                    {/* Table UI */}
-                    <div className="overflow-x-auto">
-                      <table className="w-full border-collapse">
-                        <thead>
-                          <tr>
-                            {newTableHeaders.map((header, index) => (
-                              <th
-                                key={index}
-                                className="p-2 border bg-gray-100 dark:bg-gray-700"
-                              >
-                                <input
-                                  type="text"
-                                  value={header}
-                                  onChange={(e) => {
-                                    const newHeaders = [...newTableHeaders];
-                                    newHeaders[index] = e.target.value;
-                                    setNewTableHeaders(newHeaders);
-                                  }}
-                                  className="bg-transparent w-full text-center"
-                                />
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {newTableData.map((row, rowIndex) => (
-                            <tr key={rowIndex}>
-                              {row.map((cell, colIndex) => (
-                                <td key={colIndex} className="p-2 border">
-                                  <input
-                                    type="text"
-                                    value={cell}
-                                    onChange={(e) => {
-                                      const newData = [...newTableData];
-                                      newData[rowIndex][colIndex] =
-                                        e.target.value;
-                                      setNewTableData(newData);
-                                    }}
-                                    className="w-full bg-transparent text-center"
-                                  />
-                                </td>
-                              ))}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                      <div className="mt-4 flex gap-2">
-                        <button
-                          onClick={() =>
-                            setNewTableData([
-                              ...newTableData,
-                              newTableHeaders.map(() => ""),
-                            ])
-                          }
-                          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                        >
-                          Add Row
-                        </button>
-                        <button
-                          onClick={() => {
-                            const newColumnName = `Column ${
-                              newTableHeaders.length + 1
-                            }`;
-                            setNewTableHeaders([
-                              ...newTableHeaders,
-                              newColumnName,
-                            ]);
-                            setNewTableData(
-                              newTableData.map((row) => [...row, ""])
-                            );
-                          }}
-                          className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
-                        >
-                          Add Column
-                        </button>
-                        <button
-                          onClick={() => {
-                            const tableName = newTableName.trim()
-                              ? newTableName
-                              : `New Table ${files.length + 1}`;
-                            const newFile: ExcelFile = {
-                              id: Date.now().toString(),
-                              name: tableName,
-                              sheets: {
-                                "Sheet 1": {
-                                  headers: newTableHeaders,
-                                  data: [newTableHeaders, ...newTableData], // include headers as first row
-                                },
-                              },
-                              currentWorksheet: "Sheet 1",
-                              modified: false,
-                            };
-                            setFiles([...files, newFile]);
-                            setActiveFileId(newFile.id);
-                            setIsCreating(false);
-                            setNewTableHeaders(["Column 1"]);
-                            setNewTableData([[""]]);
-                            setNewTableName("");
-                          }}
-                          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-                        >
-                          Create Table
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                  <SuspenseWrapper>
+                    <TableCreator
+                      darkMode={darkMode}
+                      onSave={(newFile) => {
+                        setFiles([...files, newFile]);
+                        setActiveFileId(newFile.id);
+                        setIsCreating(false);
+                      }}
+                      onCancel={() => setIsCreating(false)}
+                    />
+                  </SuspenseWrapper>
                 )}
 
                 {/* File List */}

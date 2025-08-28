@@ -79,6 +79,7 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({ file, updateFile }) => {
           <select
             className="border rounded px-2 py-1 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
             value={file.currentWorksheet}
+            name="sheetSelection"
             onChange={handleWorksheetChange}
           >
             {Object.keys(file.sheets).map((sheetName) => (
@@ -98,6 +99,7 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({ file, updateFile }) => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
+              name="tableSearch"
               placeholder="Search table..."
               className="pl-9 pr-4 py-2 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
               value={searchTerm}
@@ -170,8 +172,8 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({ file, updateFile }) => {
                   key={rowIndex}
                   className={
                     rowIndex === 0
-                      ? "bg-gray-100 dark:bg-gray-700 sticky top-0 z-10"
-                      : "dark:bg-gray-800"
+                      ? "bg-gray-100 dark:bg-gray-700 sticky top-0 z-10 h-12"
+                      : "bg-white dark:bg-gray-800 h-10"
                   }
                 >
                   {row.map((cell, colIndex) => (
@@ -219,7 +221,23 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({ file, updateFile }) => {
           </button>
           <button
             onClick={() => {
-              const newRow = Array(sheetData[0].length).fill("");
+              let newRow;
+              if (sheetData.length > 1) {
+                const lastRow = sheetData[sheetData.length - 1];
+                newRow = lastRow.map(cell => {
+                  if (typeof cell === 'number') {
+                    return 0;
+                  } else if (cell instanceof Date) {
+                    return null;
+                  } else if (cell === null) {
+                    return null;
+                  } else {
+                    return "";
+                  }
+                });
+              } else {
+                newRow = Array(sheetData[0].length).fill("");
+              }
               const newData = [...sheetData, newRow];
               updateFile({
                 ...file,
