@@ -1,7 +1,12 @@
 export interface ExcelFile {
   id: string;
   name: string;
-  sheets: { [key: string]: { headers: string[], data: (string | number | Date | null)[][] } };
+  sheets: {
+    [key: string]: {
+      headers: string[];
+      data: (string | number | Date | null)[][];
+    };
+  };
   currentWorksheet: string;
   modified: boolean;
 }
@@ -17,6 +22,8 @@ export interface TableCellProps {
   colIndex: number;
   isHeader: boolean;
   sortColumn: (colIndex: number) => void;
+  // optional handler to delete a column (only used for header cells)
+  deleteColumn?: (colIndex: number) => void;
   updateCell: (
     rowIndex: number,
     colIndex: number,
@@ -32,7 +39,6 @@ export interface ExcelViewerProps {
 export interface FileListProps {
   files: ExcelFile[];
   activeFileId: string;
-  selectedFiles: string[];
   onSelectFile: (fileId: string) => void;
   onRemoveFile: (fileId: string) => void;
   onSelectMerge: (fileIds: string[], fileName: string) => void;

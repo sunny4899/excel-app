@@ -12,16 +12,100 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({ file, updateFile }) => {
 
   // Use the current worksheet's data
   const currentSheet = file.sheets[file.currentWorksheet];
+  // ensure headers array exists and matches column count
   const sheetData = currentSheet.data;
+  const headers =
+    currentSheet.headers ||
+    sheetData[0]?.map((c: unknown) => (c == null ? "" : String(c))) ||
+    [];
 
   const updateCell = (
     rowIndex: number,
     colIndex: number,
     value: string | number | Date | null
   ) => {
+    // If editing header row, update headers array instead of data
+    if (rowIndex === 0) {
+      const newHeaders = [...(currentSheet.headers || headers)];
+      // ensure headers array is long enough for the edited column
+      while (newHeaders.length <= colIndex) newHeaders.push("");
+      newHeaders[colIndex] = value == null ? "" : String(value);
+
+      // Determine target column count: keep at least the current widest row so we don't drop columns
+      const currentMaxCols = Math.max(...sheetData.map((r) => r.length));
+      const targetCols = Math.max(currentMaxCols, newHeaders.length);
+
+      // Ensure headers array matches targetCols (pad with empty strings)
+      while (newHeaders.length < targetCols) newHeaders.push("");
+
+      const newData = sheetData.map((r, idx) => {
+        if (idx === 0) return newHeaders.slice();
+        const row = [...r];
+        // pad shorter rows with empty strings to keep column alignment
+        while (row.length < targetCols) row.push("");
+        // do NOT truncate rows here; keep existing extra columns intact
+        return row;
+      });
+
+      updateFile({
+        ...file,
+        sheets: {
+          ...file.sheets,
+          [file.currentWorksheet]: {
+            ...currentSheet,
+            headers: newHeaders,
+            data: newData,
+          },
+        },
+        modified: true,
+      });
+      return;
+    }
+
     const newData = [...sheetData];
+    newData[rowIndex] = [...newData[rowIndex]];
     newData[rowIndex][colIndex] = value;
 
+    updateFile({
+      ...file,
+      sheets: {
+        ...file.sheets,
+        [file.currentWorksheet]: {
+          ...currentSheet,
+          data: newData,
+        },
+      },
+      modified: true,
+    });
+  };
+
+  const deleteColumn = (colIndex: number) => {
+    // Remove the column from headers and every row
+    const newData = sheetData.map((row) => {
+      const newRow = [...row];
+      newRow.splice(colIndex, 1);
+      return newRow;
+    });
+    const newHeaders = currentSheet.headers ? [...currentSheet.headers] : [];
+    if (newHeaders.length > colIndex) newHeaders.splice(colIndex, 1);
+
+    updateFile({
+      ...file,
+      sheets: {
+        ...file.sheets,
+        [file.currentWorksheet]: {
+          ...currentSheet,
+          headers: newHeaders,
+          data: newData,
+        },
+      },
+      modified: true,
+    });
+  };
+
+  const deleteRow = (rowIndex: number) => {
+    if (rowIndex === 0) return; // don't delete header
+    const newData = sheetData.filter((_, idx) => idx !== rowIndex);
     updateFile({
       ...file,
       sheets: {
@@ -172,8 +256,8 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({ file, updateFile }) => {
                   key={rowIndex}
                   className={
                     rowIndex === 0
-                      ? "bg-gray-100 dark:bg-gray-700 sticky top-0 z-10 h-12"
-                      : "bg-white dark:bg-gray-800 h-10"
+                      ? "bg-gray-100 dark:bg-gray-700 sticky top-0 z-10 h-12 divide-x divide-gray-200 dark:divide-gray-600"
+                      : "bg-white dark:bg-gray-800 h-10 divide-x divide-gray-200 dark:divide-gray-600"
                   }
                 >
                   {row.map((cell, colIndex) => (
@@ -184,9 +268,27 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({ file, updateFile }) => {
                       colIndex={colIndex}
                       isHeader={rowIndex === 0}
                       sortColumn={sortColumn}
+                      deleteColumn={rowIndex === 0 ? deleteColumn : undefined}
                       updateCell={updateCell}
                     />
                   ))}
+
+                  {/* Placeholder for header row or delete button for data rows */}
+                  {rowIndex === 0 ? (
+                    // small placeholder column to align with compact delete buttons
+                    <th className="px-1 py-1 border-l border-b border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 w-8" />
+                  ) : (
+                    <td className="px-1 py-1 border-l border-b border-gray-200 dark:border-gray-600 w-8 text-center">
+                      <button
+                        onClick={() => deleteRow(rowIndex)}
+                        className="text-red-500 hover:text-red-700 px-1 py-0.5 rounded-full text-xs font-semibold"
+                        title="Delete row"
+                        aria-label={`Delete row ${rowIndex}`}
+                      >
+                        x
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -224,8 +326,8 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({ file, updateFile }) => {
               let newRow;
               if (sheetData.length > 1) {
                 const lastRow = sheetData[sheetData.length - 1];
-                newRow = lastRow.map(cell => {
-                  if (typeof cell === 'number') {
+                newRow = lastRow.map((cell) => {
+                  if (typeof cell === "number") {
                     return 0;
                   } else if (cell instanceof Date) {
                     return null;

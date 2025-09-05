@@ -6,8 +6,7 @@ import { exportFile } from '../utils/excel';
 
 const FileList: React.FC<FileListProps> = ({ 
   files, 
-  activeFileId, 
-  selectedFiles,
+  activeFileId,
   onSelectFile, 
   onRemoveFile
 }) => {
@@ -35,8 +34,7 @@ const FileList: React.FC<FileListProps> = ({
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Uploaded Files</h2>
         <Link 
-          to="/merge" 
-          state={{ selectedIds: selectedFiles }}
+          to="/merge"
           className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-sm font-medium transition-colors"
         >
           Merge Files
@@ -49,7 +47,6 @@ const FileList: React.FC<FileListProps> = ({
             className={`
               relative flex items-center p-3 rounded-lg cursor-pointer 
               border transition-all duration-200 hover:shadow-md
-              ${selectedFiles.includes(file.id) ? 'ring-2 ring-blue-500 dark:ring-blue-400' : ''}
               ${file.id === activeFileId 
                 ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 dark:border-blue-400' 
                 : 'border-gray-200 bg-white dark:bg-gray-700 hover:border-blue-300 dark:hover:border-blue-400'
